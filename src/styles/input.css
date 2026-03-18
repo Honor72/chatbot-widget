@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* scrollbar */
+::-webkit-scrollbar {
+	@apply h-[4px] w-[4px];
+}
+
+::-webkit-scrollbar-track {
+	@apply bg-gray-200;
+}
+
+::-webkit-scrollbar-thumb {
+	@apply bg-primary;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	@apply bg-gray-600;
+}
+
+@layer base {
+	* {
+		@apply border-solid border-gray-200;
+	}
+}
+
+@layer utilities {
+	.shadow-main-ui {
+		box-shadow:
+			0 24px 44px rgba(15, 23, 42, 0.18),
+			0 6px 14px rgba(15, 23, 42, 0.08);
+	}
+
+	.animate-chat-in {
+		animation: chat-in 220ms ease-out both;
+	}
+}
+
+@keyframes chat-in {
+	0% {
+		opacity: 0;
+		transform: translateY(6px) scale(0.99);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
