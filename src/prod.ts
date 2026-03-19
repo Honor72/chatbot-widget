@@ -2,7 +2,8 @@ import { createApp } from "vue";
 import N8nEmbeddedChatInterface from "./components/N8nEmbeddedChatInterface.vue";
 import i18n from "./i18n";
 import { useCustomColors, type ColorProps } from "./composables/useCustomColors";
-import "./styles/output.css";
+import baseStyles from "./styles/output.css?inline";
+import widgetScopedFallbackStyles from "./styles/widget-scoped-fallback.css?inline";
 
 class N8nEmbeddedChatInterfaceElement extends HTMLElement {
 	connectedCallback() {
@@ -78,13 +79,5 @@ const registerCustomElements = (css = "") => {
 	}
 };
 
-fetch(new URL("./n8n-embedded-chat-interface.css", import.meta.url))
-	.then((res) => {
-		if (!res.ok) throw new Error(`Failed to load CSS: ${res.status}`);
-		return res.text();
-	})
-	.then((css) => registerCustomElements(css))
-	.catch((error) => {
-		console.warn("Widget CSS could not be loaded. Registering without injected styles.", error);
-		registerCustomElements();
-	});
+const embeddedStyles = `${baseStyles}\n${widgetScopedFallbackStyles}`;
+registerCustomElements(embeddedStyles);
