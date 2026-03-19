@@ -122,11 +122,8 @@ export const useN8n = createGlobalState(() => {
 				body: JSON.stringify(body),
 			});
 			if (!response.ok) throw new Error(await response.text());
-			const data: unknown = await response.json();
-			const directReply = data && typeof data === "object" ? (data as ChatMessageResponse).reply : undefined;
-			const answer = typeof directReply === "string" ? directReply : extractAssistantMessage(data);
-			const parsedSessionId = extractSessionId(data);
-			if (parsedSessionId) sessionId.value = parsedSessionId;
+			const data = await response.text();
+			const answer = data;
 			messages.value[messages.value.length - 1] = { role: "assistant", content: answer };
 			userInput.value = "";
 			saveState();
