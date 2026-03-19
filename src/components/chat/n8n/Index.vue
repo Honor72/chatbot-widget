@@ -29,7 +29,7 @@
 							<span v-if="msg.role === 'user'" class="whitespace-pre-wrap break-words">
 								{{ msg.content }}
 							</span>
-							<Thinking v-else-if="msg.content === ASSISTANT_TYPING_TOKEN" size="large" />
+							<Thinking v-else-if="msg.content === ASSISTANT_TYPING_TOKEN || msg.content === 'Thinking...'" size="large" />
 							<Renderer v-else :content="msg.content" />
 						</div>
 					</div>
@@ -48,7 +48,7 @@
 						:placeholder="placeholderText"
 						@click="focused = true"
 						@blur="focused = false"
-						@keydown.enter.exact.prevent="sendMessage(userInput)"
+						@keydown.enter.exact.prevent="submitMessage"
 					/>
 
 					<div class="flex items-center justify-between px-1 pb-1">
@@ -81,13 +81,12 @@
 						</div>
 
 						<div class="flex items-center gap-2">
-							<Thinking v-if="isLoading" class="m-[5px]" />
 							<div class="tooltip-trigger">
 								<Button
 									:disabled="isLoading"
 									class="size-9 rounded-full bg-gradient-to-r from-slate-900 to-slate-700 p-0 text-white shadow-lg transition-transform hover:scale-[1.03]"
 									:aria-label="sendTooltip"
-									@click="sendMessage(userInput)"
+									@click="submitMessage"
 								>
 									<PaperPlaneIcon class="text-lg" />
 								</Button>
@@ -118,6 +117,11 @@ const placeholderText = computed(() => (selectedLanguage.value === "cs" ? "Napi�
 const eraseTooltip = computed(() => (selectedLanguage.value === "cs" ? "Vymazat chat" : "Clear chat"));
 const sendTooltip = computed(() => (selectedLanguage.value === "cs" ? "Odeslat zprávu" : "Send message"));
 const newChatTooltip = computed(() => (selectedLanguage.value === "cs" ? "Nový chat" : "New chat"));
+const submitMessage = () => {
+	const text = userInput.value;
+	userInput.value = "";
+	void sendMessage(text);
+};
 
 onMounted(() => {
 	initializeChat();
