@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import N8nEmbeddedChatInterface from "./components/N8nEmbeddedChatInterface.vue";
 import i18n from "./i18n";
 import { useCustomColors, type ColorProps } from "./composables/useCustomColors";
+import "./styles/output.css";
 
 class N8nEmbeddedChatInterfaceElement extends HTMLElement {
 	connectedCallback() {
@@ -46,39 +47,44 @@ class N8nEmbeddedChatInterfaceElement extends HTMLElement {
 	}
 }
 
-// Load styles
-fetch(new URL("./styles/output.css", import.meta.url))
-	.then((res) => res.text())
-	.then((css) => {
-		class N8nEmbeddedChatInterfaceElementWithStyles extends N8nEmbeddedChatInterfaceElement {
-			connectedCallback() {
-				super.connectedCallback();
+const registerCustomElements = (css = "") => {
+	class N8nEmbeddedChatInterfaceElementWithStyles extends N8nEmbeddedChatInterfaceElement {
+		connectedCallback() {
+			super.connectedCallback();
+			if (!css || !this.shadowRoot) return;
+
+			try {
+				const styleTag = document.createElement("style");
+				styleTag.textContent = css + this.generateCustomColorCSS();
+				this.shadowRoot.appendChild(styleTag);
+			} catch (error) {
+				console.warn("Failed to inject custom colors:", error);
 				try {
-					const styleTag = document.createElement("style");
-					// Combine main CSS with custom color CSS (now securely validated)
-					styleTag.textContent = css + this.generateCustomColorCSS();
-					if (this.shadowRoot) {
-						this.shadowRoot.appendChild(styleTag);
-					}
-				} catch (error) {
-					console.warn('Failed to inject custom colors:', error);
-					// Fallback: inject only the main CSS without custom colors
-					try {
-						const fallbackStyleTag = document.createElement("style");
-						fallbackStyleTag.textContent = css;
-						if (this.shadowRoot) {
-							this.shadowRoot.appendChild(fallbackStyleTag);
-						}
-					} catch (fallbackError) {
-						console.error('Critical error: Failed to inject any styles:', fallbackError);
-					}
+					const fallbackStyleTag = document.createElement("style");
+					fallbackStyleTag.textContent = css;
+					this.shadowRoot.appendChild(fallbackStyleTag);
+				} catch (fallbackError) {
+					console.error("Critical error: Failed to inject any styles:", fallbackError);
 				}
 			}
 		}
-		if (!customElements.get("embedded-chat-interface")) {
-			customElements.define("embedded-chat-interface", N8nEmbeddedChatInterfaceElementWithStyles);
-		}
-		if (!customElements.get("n8n-embedded-chat-interface")) {
-			customElements.define("n8n-embedded-chat-interface", N8nEmbeddedChatInterfaceElementWithStyles);
-		}
+	}
+
+	if (!customElements.get("embedded-chat-interface")) {
+		customElements.define("embedded-chat-interface", N8nEmbeddedChatInterfaceElementWithStyles);
+	}
+	if (!customElements.get("n8n-embedded-chat-interface")) {
+		customElements.define("n8n-embedded-chat-interface", N8nEmbeddedChatInterfaceElementWithStyles);
+	}
+};
+
+fetch(new URL("./n8n-embedded-chat-interface.css", import.meta.url))
+	.then((res) => {
+		if (!res.ok) throw new Error(`Failed to load CSS: ${res.status}`);
+		return res.text();
+	})
+	.then((css) => registerCustomElements(css))
+	.catch((error) => {
+		console.warn("Widget CSS could not be loaded. Registering without injected styles.", error);
+		registerCustomElements();
 	});
