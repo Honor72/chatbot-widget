@@ -123,7 +123,8 @@ export const useN8n = createGlobalState(() => {
 			});
 			if (!response.ok) throw new Error(await response.text());
 			const data: unknown = await response.json();
-			const answer = extractAssistantMessage(data);
+			const directReply = data && typeof data === "object" ? (data as ChatMessageResponse).reply : undefined;
+			const answer = typeof directReply === "string" ? directReply : extractAssistantMessage(data);
 			const parsedSessionId = extractSessionId(data);
 			if (parsedSessionId) sessionId.value = parsedSessionId;
 			messages.value[messages.value.length - 1] = { role: "assistant", content: answer };
