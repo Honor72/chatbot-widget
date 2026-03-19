@@ -29,6 +29,7 @@
 							<span v-if="msg.role === 'user'" class="whitespace-pre-wrap break-words">
 								{{ msg.content }}
 							</span>
+							<Thinking v-else-if="msg.content === ASSISTANT_TYPING_TOKEN" size="large" />
 							<Renderer v-else :content="msg.content" />
 						</div>
 					</div>
@@ -111,6 +112,7 @@ import Renderer from "@/components/markdown/Renderer.vue";
 import { useN8n } from "@/stores/n8n";
 
 const { messages, userInput, sendMessage, isLoading, clearChat, clearDraft, initializeChat, selectedLanguage, chooseLanguage } = useN8n();
+const ASSISTANT_TYPING_TOKEN = "__assistant_typing__";
 const focused = ref(false);
 const placeholderText = computed(() => (selectedLanguage.value === "cs" ? "Napište zprávu..." : "Ask anything..."));
 const eraseTooltip = computed(() => (selectedLanguage.value === "cs" ? "Vymazat chat" : "Clear chat"));

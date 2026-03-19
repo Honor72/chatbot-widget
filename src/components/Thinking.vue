@@ -1,14 +1,23 @@
 <template>
-	<div class="thinking-chip-wrapper">
-		<span class="thinking-chip">
-			<span class="dot"></span>
-			<span class="dot delay-1"></span>
-			<span class="dot delay-2"></span>
+	<div :class="[`size-${size}`]" class="thinking-chip-wrapper">
+		<span class="thinking-chip" aria-label="Assistant is typing">
+			<span class="dot dot-1"></span>
+			<span class="dot dot-2"></span>
+			<span class="dot dot-3"></span>
 		</span>
 	</div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+withDefaults(
+	defineProps<{
+		size?: "small" | "large";
+	}>(),
+	{
+		size: "small",
+	},
+);
+</script>
 
 <style scoped>
 .thinking-chip-wrapper {
@@ -36,12 +45,23 @@
 	animation: thinking-bounce 1.1s ease-in-out infinite;
 }
 
-.delay-1 {
+.dot-2 {
 	animation-delay: 0.12s;
 }
 
-.delay-2 {
+.dot-3 {
 	animation-delay: 0.24s;
+}
+
+.size-large .thinking-chip {
+	gap: 8px;
+	padding: 10px 14px;
+}
+
+.size-large .dot {
+	width: 10px;
+	height: 10px;
+	animation-duration: 1s;
 }
 
 @keyframes thinking-bounce {
@@ -52,7 +72,7 @@
 		opacity: 0.4;
 	}
 	40% {
-		transform: translateY(-3px);
+		transform: translateY(-4px);
 		opacity: 1;
 	}
 }

@@ -5,6 +5,7 @@ import type { ChatMessageResponse } from "@/types/chat";
 export const useN8n = createGlobalState(() => {
 	const { appConfig } = useApp();
 	const { toast } = useToast();
+	const ASSISTANT_TYPING_TOKEN = "__assistant_typing__";
 
 	const messages = ref<{ role: "user" | "assistant"; content: string }[]>([]);
 	const userInput = ref("");
@@ -90,7 +91,8 @@ export const useN8n = createGlobalState(() => {
 	};
 
 	const sendMessage = async (chatInput: string) => {
-		if (chatInput.trim() === "") {
+		const messageToSend = chatInput.trim();
+		if (messageToSend === "") {
 			userInput.value = "";
 			toast({ title: "Please enter a message" });
 			return;
@@ -106,13 +108,14 @@ export const useN8n = createGlobalState(() => {
 			return;
 		}
 
-		messages.value.push({ role: "user", content: chatInput });
-		messages.value.push({ role: "assistant", content: "Thinking..." });
+		userInput.value = "";
+		messages.value.push({ role: "user", content: messageToSend });
+		messages.value.push({ role: "assistant", content: ASSISTANT_TYPING_TOKEN });
 
 		isLoading.value = true;
 
 		try {
-			const body: Record<string, any> = { chatInput };
+			const body: Record<string, any> = { chatInput: messageToSend };
 			if (sessionId.value) body.sessionId = sessionId.value;
 			body.language = selectedLanguage.value;
 
@@ -125,7 +128,6 @@ export const useN8n = createGlobalState(() => {
 			const data = await response.text();
 			const answer = data;
 			messages.value[messages.value.length - 1] = { role: "assistant", content: answer };
-			userInput.value = "";
 			saveState();
 		} catch (error) {
 			messages.value[messages.value.length - 1] = { role: "assistant", content: "Error: " + (error as any).message };
