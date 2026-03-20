@@ -6,17 +6,17 @@ export const useN8n = createGlobalState(() => {
 	const { appConfig } = useApp();
 	const { toast } = useToast();
 	const ASSISTANT_TYPING_TOKEN = "__assistant_typing__";
+	const SESSION_STORAGE_KEY = "chat_session_id";
 
 	const messages = ref<{ role: "user" | "assistant"; content: string }[]>([]);
 	const userInput = ref("");
 	const isLoading = ref(false);
-	const sessionId = ref<string | null>(null);
+	const sessionId = ref(localStorage.getItem("chat_session_id") || "");
 	const selectedLanguage = ref<"cs" | "en" | null>(null);
 	const STORAGE_PREFIX = "embedded_chat_state_v1";
 
 	type PersistedChatState = {
 		messages: { role: "user" | "assistant"; content: string }[];
-		sessionId: string | null;
 		selectedLanguage: "cs" | "en" | null;
 		userInput: string;
 	};
@@ -30,7 +30,6 @@ export const useN8n = createGlobalState(() => {
 		try {
 			const payload: PersistedChatState = {
 				messages: messages.value,
-				sessionId: sessionId.value,
 				selectedLanguage: selectedLanguage.value,
 				userInput: userInput.value,
 			};
@@ -57,7 +56,6 @@ export const useN8n = createGlobalState(() => {
 			if (!parsed || !Array.isArray(parsed.messages)) return false;
 
 			messages.value = parsed.messages.filter((item) => typeof item?.content === "string" && (item.role === "user" || item.role === "assistant"));
-			sessionId.value = typeof parsed.sessionId === "string" ? parsed.sessionId : null;
 			selectedLanguage.value = parsed.selectedLanguage === "cs" || parsed.selectedLanguage === "en" ? parsed.selectedLanguage : null;
 			userInput.value = typeof parsed.userInput === "string" ? parsed.userInput : "";
 			return true;
@@ -66,28 +64,12 @@ export const useN8n = createGlobalState(() => {
 		}
 	};
 
-	const extractAssistantMessage = (data: unknown): string => {
-		if (typeof data === "string") return data;
-
-		if (Array.isArray(data) && data.length > 0) {
-			return extractAssistantMessage(data[0]);
+	const ensureSessionId = () => {
+		if (!sessionId.value) {
+			sessionId.value = crypto.randomUUID();
+			localStorage.setItem(SESSION_STORAGE_KEY, sessionId.value);
 		}
-
-		if (data && typeof data === "object") {
-			const payload = data as ChatMessageResponse;
-			if (typeof payload.output === "string") return payload.output;
-			if (typeof payload.reply === "string") return payload.reply;
-			if (typeof payload.message === "string") return payload.message;
-			if (typeof payload.text === "string") return payload.text;
-		}
-
-		return "Thanks! Your message was received.";
-	};
-
-	const extractSessionId = (data: unknown): string | null => {
-		if (!data || typeof data !== "object") return null;
-		const payload = data as ChatMessageResponse;
-		return payload.sessionId ?? payload.sessionID ?? payload.session_id ?? null;
+		return sessionId.value;
 	};
 
 	const sendMessage = async (chatInput: string) => {
@@ -115,9 +97,10 @@ export const useN8n = createGlobalState(() => {
 		isLoading.value = true;
 
 		try {
-			const body: Record<string, any> = { chatInput: messageToSend };
-			if (sessionId.value) body.sessionId = sessionId.value;
-			body.language = selectedLanguage.value;
+			const body = {
+				chatInput: messageToSend,
+				sessionId: ensureSessionId(),
+			};
 
 			const response = await fetch(appConfig.value.hostname, {
 				method: "POST",
@@ -125,8 +108,13 @@ export const useN8n = createGlobalState(() => {
 				body: JSON.stringify(body),
 			});
 			if (!response.ok) throw new Error(await response.text());
-			const data = await response.text();
-			const answer = data;
+			const data = await response.json() as ChatMessageResponse;
+			const answer = typeof data.output === "string" ? data.output : "";
+			if (!answer) throw new Error("Invalid response: missing output");
+			if (typeof data.sessionId === "string" && data.sessionId) {
+				sessionId.value = data.sessionId;
+				localStorage.setItem(SESSION_STORAGE_KEY, data.sessionId);
+			}
 			messages.value[messages.value.length - 1] = { role: "assistant", content: answer };
 			saveState();
 		} catch (error) {
@@ -146,7 +134,6 @@ export const useN8n = createGlobalState(() => {
 		}
 
 		selectedLanguage.value = null;
-		sessionId.value = null;
 		userInput.value = "";
 		if (appConfig.value.initialMessage && appConfig.value.initialMessage.trim() !== "") {
 			messages.value = [{ role: "assistant", content: appConfig.value.initialMessage }];
@@ -173,7 +160,7 @@ export const useN8n = createGlobalState(() => {
 		saveState();
 	};
 
-	watch([messages, userInput, selectedLanguage, sessionId], () => {
+	watch([messages, userInput, selectedLanguage], () => {
 		saveState();
 	}, { deep: true });
 
