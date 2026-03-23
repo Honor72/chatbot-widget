@@ -11,7 +11,6 @@ export const useN8n = createGlobalState(() => {
 	const messages = ref<{ role: "user" | "assistant"; content: string }[]>([]);
 	const userInput = ref("");
 	const isLoading = ref(false);
-	const sessionId = ref(localStorage.getItem("chat_session_id") || "");
 	const selectedLanguage = ref<"cs" | "en" | null>(null);
 	const STORAGE_PREFIX = "embedded_chat_state_v1";
 
@@ -64,12 +63,18 @@ export const useN8n = createGlobalState(() => {
 		}
 	};
 
+	function getSessionId() {
+		return localStorage.getItem("chat_session_id");
+	}
+
+	const resetSessionId = () => {
+		const newSessionId = crypto.randomUUID();
+		localStorage.setItem(SESSION_STORAGE_KEY, newSessionId);
+		return newSessionId;
+	};
+
 	const ensureSessionId = () => {
-		if (!sessionId.value) {
-			sessionId.value = crypto.randomUUID();
-			localStorage.setItem(SESSION_STORAGE_KEY, sessionId.value);
-		}
-		return sessionId.value;
+		return getSessionId() || resetSessionId();
 	};
 
 	const sendMessage = async (chatInput: string) => {
@@ -112,7 +117,6 @@ export const useN8n = createGlobalState(() => {
 			const answer = typeof data.output === "string" ? data.output : "";
 			if (!answer) throw new Error("Invalid response: missing output");
 			if (typeof data.sessionId === "string" && data.sessionId) {
-				sessionId.value = data.sessionId;
 				localStorage.setItem(SESSION_STORAGE_KEY, data.sessionId);
 			}
 			messages.value[messages.value.length - 1] = { role: "assistant", content: answer };
@@ -144,6 +148,7 @@ export const useN8n = createGlobalState(() => {
 	};
 
 	const chooseLanguage = (language: "cs" | "en") => {
+		resetSessionId();
 		selectedLanguage.value = language;
 		const greeting = language === "cs" ? "Ahoj! Jak vám mohu dnes pomoci?" : "Hi! How can I help you today?";
 		messages.value = [{ role: "assistant", content: greeting }];
@@ -152,6 +157,7 @@ export const useN8n = createGlobalState(() => {
 
 	const clearChat = () => {
 		isLoading.value = false;
+		resetSessionId();
 		initializeChat(true);
 	};
 
