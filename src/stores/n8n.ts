@@ -1,6 +1,5 @@
 import { createGlobalState } from "@vueuse/core";
 import { useToast } from "@/components/ui/toast/use-toast";
-import type { ChatMessageResponse } from "@/types/chat";
 
 export const useN8n = createGlobalState(() => {
 	const { appConfig } = useApp();
@@ -104,7 +103,7 @@ export const useN8n = createGlobalState(() => {
 		try {
 			const body = {
 				chatInput: messageToSend,
-				sessionId: ensureSessionId(),
+				session_id: ensureSessionId(),
 			};
 
 			const response = await fetch(appConfig.value.hostname, {
