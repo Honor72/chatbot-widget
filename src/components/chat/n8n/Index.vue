@@ -6,11 +6,11 @@
 				<p class="chat-empty-subtitle-en">Choose language to start</p>
 				<div class="mt-5 flex w-full max-w-[320px] gap-3">
 					<Button class="flex-1 rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 hover:bg-slate-100" variant="secondary" @click="chooseLanguage('cs')">
-						<span>🇨🇿</span>
+						<FlagCzechia class="h-5 w-5" />
 						<span>Čeština</span>
 					</Button>
 					<Button class="flex-1 rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 hover:bg-slate-100" variant="secondary" @click="chooseLanguage('en')">
-						<span>🇬🇧</span>
+						<FlagUnitedKingdom class="h-5 w-5" />
 						<span>English</span>
 					</Button>
 				</div>
@@ -106,6 +106,8 @@ import { Button } from "@/components/ui/button";
 import PaperPlaneIcon from "~icons/fluent/send-24-regular";
 import RefreshIcon from "~icons/material-symbols/refresh-rounded";
 import FluentErase24Regular from "~icons/fluent/eraser-24-regular";
+import FlagCzechia from "~icons/twemoji/flag-czechia";
+import FlagUnitedKingdom from "~icons/twemoji/flag-united-kingdom";
 import Thinking from "@/components/Thinking.vue";
 import Renderer from "@/components/markdown/Renderer.vue";
 import { useN8n } from "@/stores/n8n";
