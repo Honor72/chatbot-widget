@@ -113,12 +113,20 @@ export const useN8n = createGlobalState(() => {
 				body: JSON.stringify(body),
 			});
 			if (!response.ok) throw new Error(await response.text());
-			const data = await response.json() as ChatMessageResponse;
-			const answer = typeof data.output === "string" ? data.output : "";
-			if (!answer) throw new Error("Invalid response: missing output");
-			if (typeof data.sessionId === "string" && data.sessionId) {
-				localStorage.setItem(SESSION_STORAGE_KEY, data.sessionId);
+			const rawResponse = await response.text();
+			let answer = "";
+
+			try {
+				const data = JSON.parse(rawResponse) as ChatMessageResponse;
+				answer = typeof data.output === "string" ? data.output : "";
+				if (typeof data.sessionId === "string" && data.sessionId) {
+					localStorage.setItem(SESSION_STORAGE_KEY, data.sessionId);
+				}
+			} catch {
+				answer = rawResponse.trim();
 			}
+
+			if (!answer) throw new Error("Invalid response: empty output");
 			messages.value[messages.value.length - 1] = { role: "assistant", content: answer };
 			saveState();
 		} catch (error) {
