@@ -14,6 +14,16 @@ Embeddable chat web component built with Vue 3 + TypeScript.
 </embedded-chat-interface>
 ```
 
+Backward-compatible tag is also supported:
+
+```html
+<n8n-embedded-chat-interface
+  label="Support Chat"
+  hostname="https://your-webhook-url.com"
+  open-on-start="false">
+</n8n-embedded-chat-interface>
+```
+
 ## Webhook Contract
 
 Request:
