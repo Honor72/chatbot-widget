@@ -43,6 +43,7 @@
 						v-if="!isLoading"
 						v-model="userInput"
 						:disabled="isLoading"
+						:maxlength="MAX_MESSAGE_LENGTH"
 						:class="focused ? 'h-[84px]' : 'h-[40px]'"
 						class="resize-none transition-all duration-200"
 						:placeholder="placeholderText"
@@ -50,6 +51,10 @@
 						@blur="focused = false"
 						@keydown.enter.exact.prevent="submitMessage"
 					/>
+
+					<div class="flex justify-end px-1 pb-1">
+						<span class="text-[11px] text-slate-600 opacity-60">{{ characterCounter }}</span>
+					</div>
 
 					<div class="flex items-center justify-between px-1 pb-1">
 						<div class="flex items-center gap-2">
@@ -114,11 +119,13 @@ import { useN8n } from "@/stores/n8n";
 
 const { messages, userInput, sendMessage, isLoading, clearChat, clearDraft, initializeChat, selectedLanguage, chooseLanguage } = useN8n();
 const ASSISTANT_TYPING_TOKEN = "__assistant_typing__";
+const MAX_MESSAGE_LENGTH = 100;
 const focused = ref(false);
 const placeholderText = computed(() => (selectedLanguage.value === "cs" ? "Napište zprávu..." : "Ask anything..."));
 const eraseTooltip = computed(() => (selectedLanguage.value === "cs" ? "Vymazat chat" : "Clear chat"));
 const sendTooltip = computed(() => (selectedLanguage.value === "cs" ? "Odeslat zprávu" : "Send message"));
 const newChatTooltip = computed(() => (selectedLanguage.value === "cs" ? "Nový chat" : "New chat"));
+const characterCounter = computed(() => `${String(userInput.value?.length ?? 0)} / ${MAX_MESSAGE_LENGTH}`);
 const submitMessage = () => {
 	const text = userInput.value;
 	userInput.value = "";
